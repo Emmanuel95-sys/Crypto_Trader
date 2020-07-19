@@ -5,17 +5,15 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.startActivity
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.platzi.android.firestore.R
 import com.platzi.android.firestore.model.User
 import com.platzi.android.firestore.network.Callback
-import com.platzi.android.firestore.network.FirestoreService
+import com.platzi.android.firestore.network.FireStoreService
 import com.platzi.android.firestore.network.USERS_COLLECTION_NAME
 import kotlinx.android.synthetic.main.activity_login.*
-import kotlinx.android.synthetic.main.activity_trader.*
 import java.lang.Exception
 
 /**
@@ -31,62 +29,67 @@ class LoginActivity : AppCompatActivity() {
 
 
     private val TAG = "LoginActivity"
-
+    //acceso al modulo de autenticacion de Firebase
     private var auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    lateinit var firestoreService: FirestoreService
+    lateinit var firestoreService: FireStoreService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-        firestoreService = FirestoreService(FirebaseFirestore.getInstance())
+        //instanciando a firestoreService
+        firestoreService = FireStoreService(FirebaseFirestore.getInstance())
     }
 
 
     fun onStartClicked(view: View) {
+        //mejorando experiencia de usuario
         view.isEnabled = false
+        //realizar proceso de autenticacion
+        //le agregamos un listener para saber si la operacion fue exitosa o no
+        //regresa una tarea que puede ser o o exitosa
         auth.signInAnonymously()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    //una vez la autenticaion anonima es exitosa
+                    //vamos a busccar si ese usuario existe o no
                     val username = username.text.toString()
-                    firestoreService.findUserById(username, object : Callback<User> {
-
+                    firestoreService.findUserById(username, object : Callback<User>{
                         override fun onSuccess(result: User?) {
-                            if (result == null) {
-                                val user = User()
-                                user.username = username
-                                saveUserAndStartMainActivity(user, view)
-                            } else
-                                startMainActivity(username)
-                        }
+                            //el usuario no ha sido creado en la DB
+                            if(result == null){
+                                val userInstance : User = User()
+                                userInstance.username = username
+                                //se envia la vista para notificar con show error
+                                saveUserAndStartMainActivity(userInstance, view)
 
+                            }else{
+                                startMainActivity(username)
+                            }
+                        }
                         override fun onFailed(exception: Exception) {
                             showErrorMessage(view)
                         }
-
                     })
-
-
-                } else {
+                        } else {
                     showErrorMessage(view)
                     view.isEnabled = true
                 }
             }
-
     }
 
     private fun saveUserAndStartMainActivity(user: User, view: View) {
-        firestoreService.setDocument(user, USERS_COLLECTION_NAME, user.username, object : Callback<Void> {
+
+        firestoreService.setDocument(user, USERS_COLLECTION_NAME, user.username, object : Callback<Void>{
             override fun onSuccess(result: Void?) {
                 startMainActivity(user.username)
-            }
 
+            }
             override fun onFailed(exception: Exception) {
                 showErrorMessage(view)
-                Log.e(TAG, "error", exception)
+                Log.e(TAG, exception.toString())
                 view.isEnabled = true
             }
-
         })
     }
 
@@ -101,5 +104,8 @@ class LoginActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+    //verificar usuarios ya creados para no volverlos a verificar.
+    
+
 
 }
