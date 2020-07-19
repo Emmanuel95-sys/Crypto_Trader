@@ -66,6 +66,16 @@
                     android:drawablePadding="5dp"
                     android:padding="10dp"
                     android:text="@string/buy"/>
+            <TextView
+                android:id="@+id/outOfStock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/out_of_stock"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:layout_gravity="center_horizontal"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="15sp"/>
         </LinearLayout>
     </LinearLayout>
 
